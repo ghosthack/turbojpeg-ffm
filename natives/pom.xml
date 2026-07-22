@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.github.ghosthack</groupId>
+    <artifactId>turbojpeg-ffm-parent</artifactId>
+    <version>3.2.0-0.1.0</version>
+  </parent>
+
+  <artifactId>turbojpeg-ffm-natives</artifactId>
+  <packaging>pom</packaging>
+
+  <name>turbojpeg-ffm natives</name>
+  <description>From-source libjpeg-turbo shared library, one classifier jar per platform</description>
+
+  <!-- Unlike the parent (MIT binding code), these jars convey libjpeg-turbo binaries. -->
+  <licenses>
+    <license>
+      <name>libjpeg-turbo licenses (BSD-3-Clause, IJG, zlib)</name>
+      <url>https://github.com/libjpeg-turbo/libjpeg-turbo/blob/main/LICENSE.md</url>
+      <distribution>repo</distribution>
+      <comments>libjpeg-turbo built from unmodified source. See BUILD-INFO.txt and LICENSE.md inside each jar.</comments>
+    </license>
+  </licenses>
+
+  <!--
+    src/main/resources/turbojpeg-natives/<classifier>/ is populated by build-natives/<classifier>.sh
+    on the matching machine. The jar for the current platform is built with that
+    classifier; other platforms' directories are simply absent locally.
+  -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.2</version>
+        <executions>
+          <execution>
+            <id>natives-jar</id>
+            <phase>package</phase>
+            <goals><goal>jar</goal></goals>
+            <configuration>
+              <classesDirectory>src/main/resources</classesDirectory>
+              <classifier>${native.classifier}</classifier>
+              <includes>
+                <include>turbojpeg-natives/${native.classifier}/**</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <!-- Deploy: both platforms' staged natives present locally, so attach both
+       classifier jars in one reactor run. -->
+  <profiles>
+    <profile>
+      <id>all-natives</id>
+      <properties>
+        <native.classifier>macos-arm64</native.classifier>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>3.4.2</version>
+            <executions>
+              <execution>
+                <id>natives-jar-windows</id>
+                <phase>package</phase>
+                <goals><goal>jar</goal></goals>
+                <configuration>
+                  <classesDirectory>src/main/resources</classesDirectory>
+                  <classifier>windows-x64</classifier>
+                  <includes>
+                    <include>turbojpeg-natives/windows-x64/**</include>
+                  </includes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>
