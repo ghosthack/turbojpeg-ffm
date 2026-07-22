@@ -8,51 +8,14 @@ pom version, push to main** — CI does the rest.
 
 ## One-time setup: the four repo secrets
 
-(Settings → Secrets → Actions, or the `gh` commands below. The
-`io.github.ghosthack` namespace is already verified on the portal.)
+(Settings → Secrets → Actions. The `io.github.ghosthack` namespace is
+already verified on the portal.)
 
 | Secret | Value |
 |---|---|
 | `MAVEN_CENTRAL_USERNAME` / `MAVEN_CENTRAL_PASSWORD` | central.sonatype.com → Account → user token: the token *username* and token *password*, set **separately** (NOT the base64 `user:pass` combo the portal also offers — that's only for settings.xml `Authorization` headers). Regenerating a token invalidates the old one → update ffmpeg-ffm's copies too. |
-| `GPG_PRIVATE_KEY` | ASCII-armored private key export (see below) |
+| `GPG_PRIVATE_KEY` | ASCII-armored private key export (`gpg --armor --export-secret-keys <KEYID>`) |
 | `GPG_PASSPHRASE` | that key's passphrase |
-
-**All-in-one:** `scripts/setup-signing.sh` does everything below — key
-generation (skipping what exists), keyserver publish, all four secrets
-(prompting only for missing Central-token values), and the deploy rerun.
-The manual steps, for reference:
-
-### Generating a fresh signing key (if the old one/passphrase is lost)
-
-Central accepts any published key; it does not have to match ffmpeg-ffm's, and
-the UID email is never validated — the GitHub noreply address keeps a real
-address off the public keyservers. (`keyserver.ubuntu.com` publishes without
-email verification; avoid `keys.openpgp.org`, which verifies UID emails.)
-
-```sh
-# 1. passphrase, kept in a root-only file you also save somewhere durable
-PF=~/.gnupg/turbojpeg-ffm-signing-passphrase.txt
-openssl rand -base64 24 > "$PF" && chmod 600 "$PF"
-
-# 2. generate + export
-gpg --batch --pinentry-mode loopback --passphrase-file "$PF" \
-    --quick-generate-key "ghosthack <ghosthack@users.noreply.github.com>" rsa4096 sign 2y
-KEYID=$(gpg --list-secret-keys --with-colons ghosthack | awk -F: '/^sec/{print $5}' | tail -1)
-gpg --batch --pinentry-mode loopback --passphrase-file "$PF" \
-    --armor --export-secret-keys "$KEYID" > /tmp/key.asc
-
-# 3. Central verifies signatures against public keyservers — publish the public half
-gpg --keyserver keyserver.ubuntu.com --send-keys "$KEYID"
-
-# 4. set the secrets, then clean up
-gh secret set GPG_PRIVATE_KEY -R ghosthack/turbojpeg-ffm < /tmp/key.asc
-gh secret set GPG_PASSPHRASE  -R ghosthack/turbojpeg-ffm < "$PF"
-rm /tmp/key.asc
-
-# 5. the two portal-token secrets
-gh secret set MAVEN_CENTRAL_USERNAME -R ghosthack/turbojpeg-ffm   # paste token username
-gh secret set MAVEN_CENTRAL_PASSWORD -R ghosthack/turbojpeg-ffm   # paste token password
-```
 
 ### Re-running a deploy that failed on missing secrets
 
