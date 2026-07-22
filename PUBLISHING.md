@@ -19,7 +19,10 @@ pom version, push to main** — CI does the rest.
 
 ### Generating a fresh signing key (if the old one/passphrase is lost)
 
-Central accepts any published key; it does not have to match ffmpeg-ffm's.
+Central accepts any published key; it does not have to match ffmpeg-ffm's, and
+the UID email is never validated — the GitHub noreply address keeps a real
+address off the public keyservers. (`keyserver.ubuntu.com` publishes without
+email verification; avoid `keys.openpgp.org`, which verifies UID emails.)
 
 ```sh
 # 1. passphrase, kept in a root-only file you also save somewhere durable
@@ -28,7 +31,7 @@ openssl rand -base64 24 > "$PF" && chmod 600 "$PF"
 
 # 2. generate + export
 gpg --batch --pinentry-mode loopback --passphrase-file "$PF" \
-    --quick-generate-key "ghosthack <afclc2@faex.com>" rsa4096 sign 2y
+    --quick-generate-key "ghosthack <ghosthack@users.noreply.github.com>" rsa4096 sign 2y
 KEYID=$(gpg --list-secret-keys --with-colons ghosthack | awk -F: '/^sec/{print $5}' | tail -1)
 gpg --batch --pinentry-mode loopback --passphrase-file "$PF" \
     --armor --export-secret-keys "$KEYID" > /tmp/key.asc
