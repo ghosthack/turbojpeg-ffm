@@ -17,6 +17,11 @@ pom version, push to main** — CI does the rest.
 | `GPG_PRIVATE_KEY` | ASCII-armored private key export (see below) |
 | `GPG_PASSPHRASE` | that key's passphrase |
 
+**All-in-one:** `scripts/setup-signing.sh` does everything below — key
+generation (skipping what exists), keyserver publish, all four secrets
+(prompting only for missing Central-token values), and the deploy rerun.
+The manual steps, for reference:
+
 ### Generating a fresh signing key (if the old one/passphrase is lost)
 
 Central accepts any published key; it does not have to match ffmpeg-ffm's, and
