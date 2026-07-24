@@ -13,12 +13,12 @@ decode-then-downscale for baseline JPEG.
 <dependency>
   <groupId>io.github.ghosthack</groupId>
   <artifactId>turbojpeg-ffm</artifactId>
-  <version>3.2.0-0.1.0</version>
+  <version>3.2.0-0.2.0</version>
 </dependency>
 <dependency>
   <groupId>io.github.ghosthack</groupId>
   <artifactId>turbojpeg-ffm-natives</artifactId>
-  <version>3.2.0-0.1.0</version>
+  <version>3.2.0-0.2.0</version>
   <classifier>macos-arm64</classifier> <!-- and/or windows-x64 -->
   <scope>runtime</scope>
 </dependency>
