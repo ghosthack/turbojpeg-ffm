@@ -13,12 +13,12 @@ decode-then-downscale for baseline JPEG.
 <dependency>
   <groupId>io.github.ghosthack</groupId>
   <artifactId>turbojpeg-ffm</artifactId>
-  <version>3.2.0-0.2.0</version>
+  <version>3.2.0-0.2.1</version>
 </dependency>
 <dependency>
   <groupId>io.github.ghosthack</groupId>
   <artifactId>turbojpeg-ffm-natives</artifactId>
-  <version>3.2.0-0.2.0</version>
+  <version>3.2.0-0.2.1</version>
   <classifier>macos-arm64</classifier> <!-- and/or windows-x64 -->
   <scope>runtime</scope>
 </dependency>
@@ -34,7 +34,9 @@ TurboJpeg.tj3DecompressHeader(handle, jpegBuf, jpegSize);
 // pick a tjscalingfactor, tj3SetScalingFactor, then tj3Decompress8 to TJPF_BGRA
 ```
 
-Requires `--enable-native-access=ALL-UNNAMED` (JDK 22+).
+When using the module path, declare `requires turbojpeg.ffm;` and run with
+`--enable-native-access=turbojpeg.ffm`. When using the class path, run with
+`--enable-native-access=ALL-UNNAMED` (JDK 22+).
 
 ## Library resolution
 
