@@ -19,7 +19,7 @@ decode-then-downscale for baseline JPEG.
   <groupId>io.github.ghosthack</groupId>
   <artifactId>turbojpeg-ffm-natives</artifactId>
   <version>3.2.0-0.2.1</version>
-  <classifier>macos-arm64</classifier> <!-- and/or windows-x64 -->
+  <classifier>macos-arm64</classifier> <!-- or windows-x64 / linux-x64 -->
   <scope>runtime</scope>
 </dependency>
 ```
@@ -48,18 +48,18 @@ When using the module path, declare `requires turbojpeg.ffm;` and run with
    to `~/.cache/turbojpeg-ffm/<version>-<platform>/`;
 3. already-loaded libraries (loader/default lookup).
 
-Classifier jars exist for **macos-arm64** and **windows-x64**.
+Classifier jars exist for **macos-arm64**, **windows-x64**, and **linux-x64**.
 
 ## Building
 
-- `build-natives/macos-arm64.sh` / `build-natives/windows-x64.sh` (MSYS2
-  MINGW64) build libjpeg-turbo from source (cmake + ninja + nasm) and stage
-  the shared library under `natives/src/main/resources/turbojpeg-natives/`.
+- `build-natives/macos-arm64.sh`, `build-natives/windows-x64.sh` (MSYS2
+  MINGW64), and `build-natives/linux-x64.sh` build libjpeg-turbo from source
+  (cmake + ninja + nasm) and stage the shared library under
+  `natives/src/main/resources/turbojpeg-natives/`.
 - `jextract/gen-bindings.sh` regenerates the stubs from the built headers and
   re-points the symbol lookup at the runtime loader.
-- Releases publish from GitHub Actions (same flow as
-  [ffmpeg-ffm](https://github.com/ghosthack/ffmpeg-ffm): bump the pom
-  version, push to main).
+- Releases publish from a matching non-prerelease GitHub Release; see
+  [PUBLISHING.md](PUBLISHING.md).
 
 ## Licensing
 

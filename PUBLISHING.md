@@ -1,48 +1,43 @@
 # Publishing to Maven Central
 
-Same pipeline as [ffmpeg-ffm](https://github.com/ghosthack/ffmpeg-ffm): CI
-builds the natives from source on GitHub runners, and the `deploy` job signs
-and uploads one bundle (parent + core + both natives classifier jars) with
-`autoPublish=true`. Release procedure once secrets are in place: **bump the
-pom version, push to main** — CI does the rest.
+Publishing is gated by a non-prerelease GitHub Release. Pushes and pull
+requests only build and test; they never publish.
 
-## One-time setup: the four repo secrets
+## Release procedure
 
-(Settings → Secrets → Actions. The `io.github.ghosthack` namespace is
-already verified on the portal.)
+1. Set the same non-SNAPSHOT release version in the parent and module poms,
+   including the SCM tag, and update versioned documentation.
+2. Merge the release commit to `main` and wait for CI to pass.
+3. Publish a GitHub Release tagged `v<version>` and target it at that exact
+   commit.
+4. The release workflow validates that the tag matches `project.version`,
+   rebuilds and tests the macOS ARM64, Windows x64, and Linux x64 natives from
+   the tag, and deploys those exact artifacts to Maven Central.
 
-| Secret | Value |
+The Central plugin uses `autoPublish=true` and waits until the deployment is
+published. No separate portal approval is required.
+
+## Repo secrets
+
+Configure these under Settings → Secrets and variables → Actions:
+
+| Secret | Source |
 |---|---|
-| `MAVEN_CENTRAL_USERNAME` / `MAVEN_CENTRAL_PASSWORD` | central.sonatype.com → Account → user token: the token *username* and token *password*, set **separately** (NOT the base64 `user:pass` combo the portal also offers — that's only for settings.xml `Authorization` headers). Regenerating a token invalidates the old one → update ffmpeg-ffm's copies too. |
-| `GPG_PRIVATE_KEY` | ASCII-armored private key export (`gpg --armor --export-secret-keys <KEYID>`) |
-| `GPG_PASSPHRASE` | that key's passphrase |
+| `MAVEN_CENTRAL_USERNAME` / `MAVEN_CENTRAL_PASSWORD` | A Central Portal user token, split into its username and password |
+| `GPG_PRIVATE_KEY` | ASCII-armored private key from `gpg --armor --export-secret-keys <KEYID>` |
+| `GPG_PASSPHRASE` | Passphrase for that key |
 
-### Re-running a deploy that failed on missing secrets
+The `io.github.ghosthack` namespace is already verified on Central.
 
-```sh
-gh run rerun <run-id> --failed -R ghosthack/turbojpeg-ffm
-# or force a fresh full run of the current version:
-gh workflow run ci.yml -R ghosthack/turbojpeg-ffm
-```
+## Recovery and local checks
 
-## Deploy troubleshooting (lessons from 2026-07-22)
+If a release run fails, fix the underlying issue and rerun the entire workflow
+with `gh run rerun <run-id> -R ghosthack/turbojpeg-ffm`. Rerunning only failed
+jobs can lose access to native artifacts from the previous attempt.
 
-- **"Deployment ... failed while publishing" right after rotating the signing
-  key**: Central validates signatures against public keyservers, and a freshly
-  `--send-keys`'d key takes ~1–15 min to become fetchable. Wait until
-  `https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x<KEYID>` returns the
-  key, then redeploy. Publishing to `keys.openpgp.org` as well is a cheap hedge
-  (it serves key material by ID without email verification).
-- **`gh run rerun --failed` dies in `download-artifact` with a 404** ("workflow
-  run not found"): cross-attempt artifact access is flaky. Don't fight it —
-  dispatch a fresh run instead: `gh workflow run ci.yml`.
-- **Artifact not downloadable right after a green deploy**: repo1.maven.org
-  lags `autoPublish` by ~10–15 min. Poll the pom URL before declaring victory
-  (or before pointing downstream builds at the new version).
+`mvn -Prelease -Dgpg.skip=true clean verify` checks sources, javadocs, and
+packaging locally without publishing. Releases are immutable: publish changed
+content under a new version rather than rebuilding an existing version.
 
-## Local fallback
-
-`mvn -Prelease -Dgpg.skip=true clean verify` dry-runs sources/javadoc/packaging
-with no keys. A full local deploy additionally needs the portal token in
-`~/.m2/settings.xml` (server id `central`) and a local gpg key — prefer the CI
-path.
+After a successful release, Maven Central mirrors can take several minutes to
+serve the new artifacts.
